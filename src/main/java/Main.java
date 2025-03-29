@@ -7,18 +7,17 @@ public class Main {
     public static void main(String[] args) throws Exception {
         // Uncomment this block to pass the first stage
 
-         System.out.print("$ ");
+        System.out.print("$ ");
 
         Scanner scanner = new Scanner(System.in);
         String input = scanner.nextLine();
-        if (input.matches("exit [0-9]")){
+        if (input.startsWith("exit")){
             return;
         }
-        System.out.println(input + ": command not found");
-        if (input.matches("echo (\\s+\\w+)*")) {
-            String command = input.replace("echo ", "");
-            out.println(command);
-            return;
+        if (input.startsWith("echo")) {
+            System.out.println(input.substring(5));
+        } else {
+            out.println(input + ": command not found");
         }
     }
 }
