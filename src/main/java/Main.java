@@ -17,6 +17,7 @@ public class Main {
         } else if (input.matches("echo (\\s+\\w+)*")) {
             String command = input.replace("echo ", "");
             out.println(command);
+            return;
         }
         System.out.println(input + ": command not found");
         main(null);
