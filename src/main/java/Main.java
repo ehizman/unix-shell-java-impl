@@ -16,8 +16,7 @@ public class Main {
             if (input.startsWith("type")) {
                 handleTypeCommand(input);
             } else if (input.startsWith("echo")) {
-                String command = input.substring(5);
-                handleEchoCommand(command);
+                handleEchoCommand(input);
             } else{
                 out.println(input + ": command not found");
             }
@@ -32,12 +31,11 @@ public class Main {
         if (command.equalsIgnoreCase("type") || command.equalsIgnoreCase("echo") || command.equalsIgnoreCase("exit")){
             out.println(command + " is a shell builtin");
         } else {
-            out.println(input+ ": command not found");
+            out.println(command+ ": not found");
         }
     }
 
     private static void handleEchoCommand(String input) {
-        String command = input.substring(5);
-        out.println(command);
+        out.println(input.substring(5));
     }
 }
