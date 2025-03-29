@@ -19,5 +19,6 @@ public class Main {
         } else {
             out.println(input + ": command not found");
         }
+        main(null);
     }
 }
