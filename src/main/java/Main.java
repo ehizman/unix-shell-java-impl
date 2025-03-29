@@ -13,7 +13,7 @@ public class Main {
         while (!input.startsWith("exit")){
             if (input.startsWith("type")) {
                 String command = input.substring(5);
-                if (command.startsWith("exit") || command.startsWith("echo")) {
+                if (command.startsWith("exit") || command.startsWith("echo") || command.startsWith("type")) {
                     out.println(command +" is a shell builtin");
                 } else {
                     out.println(command + ": not found");
