@@ -20,6 +20,5 @@ public class Main {
             out.println(command);
             return;
         }
-        main(null);
     }
 }
