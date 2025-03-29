@@ -12,6 +12,7 @@ public class Main {
         String input = scanner.nextLine();
         if (input.equalsIgnoreCase("exit")){
             exit(0);
+            return;
         }
         System.out.println(input + ": command not found");
         main(null);
