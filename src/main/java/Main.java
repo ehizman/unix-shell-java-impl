@@ -10,7 +10,7 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
         String input = scanner.nextLine();
-        if (input.equalsIgnoreCase("exit")){
+        if (input.contains("exit")){
             exit(0);
             return;
         }
