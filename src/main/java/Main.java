@@ -12,14 +12,14 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         String input = scanner.nextLine();
         if (input.matches("exit [0-9]")){
-            exit(0);
             return;
-        } else if (input.matches("echo (\\s+\\w+)*")) {
+        }
+        System.out.println(input + ": command not found");
+        if (input.matches("echo (\\s+\\w+)*")) {
             String command = input.replace("echo ", "");
             out.println(command);
             return;
         }
-        System.out.println(input + ": command not found");
         main(null);
     }
 }
