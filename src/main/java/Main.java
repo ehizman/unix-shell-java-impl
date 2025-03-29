@@ -18,11 +18,13 @@ public class Main {
                 } else {
                     out.println(command + ": not found");
                 }
+            } else {
+                if (input.startsWith("echo")) {
+                    System.out.println(input.substring(5));
+                } else {
+                    out.println(input + ": command not found");
+                }
             }
-            if (input.startsWith("echo")) {
-                System.out.println(input.substring(5));
-            }
-            out.println(input + ": command not found");
             System.out.print("$ ");
             input = scanner.nextLine();
         }
