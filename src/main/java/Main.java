@@ -1,6 +1,7 @@
 import java.util.Scanner;
 
 import static java.lang.System.exit;
+import static java.lang.System.out;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -10,9 +11,12 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
         String input = scanner.nextLine();
-        if (input.contains("exit")){
+        if (input.matches("exit [0-9]")){
             exit(0);
             return;
+        } else if (input.matches("echo (\\s+\\w+)*")) {
+            String command = input.replace("echo ", "");
+            out.println(command);
         }
         System.out.println(input + ": command not found");
         main(null);
