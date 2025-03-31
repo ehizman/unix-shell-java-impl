@@ -1,3 +1,4 @@
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ public class Main {
         // Uncomment this block to pass the first stage
         Scanner scanner = new Scanner(System.in);
         List<String> builtins = builtins();
+        String cwd = System.getenv("PWD");
 
         while (true){
             System.out.print("$ ");
@@ -55,9 +57,20 @@ public class Main {
                 }
 
                 case "pwd" : {
-                    out.println(System.getenv("PWD"));
+                    out.println(cwd);
                     break;
                 }
+
+                case "cd" : {
+                    Path newPath = Path.of(cwd).resolve(parameter).normalize();
+                    if (Files.exists(newPath) && Files.isDirectory(newPath)) {
+                        cwd = newPath.toString();
+                    } else {
+                        out.println("cd: " + parameter + ": No such file or directory");
+                    }
+                    break;
+                }
+
                 default: {
                     Path path = getPath(command);
                     if (path != null){
@@ -86,6 +99,7 @@ public class Main {
         builtins.add("type");
         builtins.add("echo");
         builtins.add("pwd");
+        builtins.add("cd");
         return builtins;
     }
 }
