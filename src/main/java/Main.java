@@ -13,25 +13,19 @@ public class Main {
         while (true){
             System.out.print("$ ");
             String input = scanner.nextLine();
+            int indexOfFirstSpace = input.indexOf(" ");
+            String command, parameter = "";
 
-            String[] str = input.split(" ");
-            String command = str[0];
-            StringBuilder parameter = new StringBuilder();
-
-            if (str.length > 2) {
-                for (int i = 1; i < str.length ; i++) {
-                    if (i < str.length-1) {
-                        parameter.append(str[i]).append(" ");
-                    } else {
-                        parameter.append(str[i]);
-                    }
-                }
+            if (indexOfFirstSpace == -1) {
+                command = input;
+            } else {
+                command = input.substring(0, indexOfFirstSpace);
+                parameter = input.substring(indexOfFirstSpace).trim();
             }
-            String parameterStr = parameter.toString();
 
             switch (command) {
                 case "exit": {
-                    if (parameterStr.equals("0")){
+                    if (parameter.equals("0")){
                         System.exit(0);
                     } else {
                         out.println(input + ": command not found");
@@ -40,24 +34,23 @@ public class Main {
                 }
 
                 case "type": {
-                    if (parameterStr.equalsIgnoreCase(builtins[0])||
-                        parameterStr.equalsIgnoreCase(builtins[1])||
-                        parameterStr.equalsIgnoreCase(builtins[2])) {
-                        out.println(command + " is a shell builtin");
+                    if (parameter.equalsIgnoreCase(builtins[0])||
+                        parameter.equalsIgnoreCase(builtins[1])||
+                        parameter.equalsIgnoreCase(builtins[2])) {
+                        out.println(parameter + " is a shell builtin");
                     } else {
-                        out.println(command+ ": not found");
-                        String pathName = getPath(parameterStr);
+                        String pathName = getPath(parameter);
                         if (pathName != null) {
-                            out.println(parameterStr + " is " + pathName);;
+                            out.println(parameter + " is " + pathName);;
                         } else {
-                            out.println(parameterStr + ": not found");
+                            out.println(parameter + ": not found");
                         }
                     }
                     break;
                 }
 
                 case "echo": {
-                    out.println(parameterStr);
+                    out.println(parameter);
                     break;
                 }
                 default: out.println(input + ": command not found");
