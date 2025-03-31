@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.util.Arrays;
 import java.util.Scanner;
 
 import static java.lang.System.*;
@@ -17,12 +18,19 @@ public class Main {
                 handleTypeCommand(input);
             } else if (input.startsWith("echo")) {
                 handleEchoCommand(input);
-            } else{
+            } else if (input.startsWith("path")) {
+                out.println("Args: " + Arrays.toString(args));
+                handlePathCommand(input);
+            }else{
                 out.println(input + ": command not found");
             }
             System.out.print("$ ");
             input = scanner.nextLine();
         }
+    }
+
+    private static void handlePathCommand(String input) {
+        out.println("Input: " + input);
     }
 
     private static void handleTypeCommand(String input) {
