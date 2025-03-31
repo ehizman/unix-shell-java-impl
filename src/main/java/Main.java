@@ -1,6 +1,7 @@
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import static java.lang.System.*;
@@ -9,7 +10,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         // Uncomment this block to pass the first stage
         Scanner scanner = new Scanner(System.in);
-        String[] builtins = builtins();
+        List<String> builtins = builtins();
 
         while (true){
             System.out.print("$ ");
@@ -35,9 +36,7 @@ public class Main {
                 }
 
                 case "type": {
-                    if (parameter.equalsIgnoreCase(builtins[0])||
-                        parameter.equalsIgnoreCase(builtins[1])||
-                        parameter.equalsIgnoreCase(builtins[2])) {
+                    if (builtins.contains(parameter)) {
                         out.println(parameter + " is a shell builtin");
                     } else {
                         Path path = getPath(parameter);
@@ -52,6 +51,11 @@ public class Main {
 
                 case "echo": {
                     out.println(parameter);
+                    break;
+                }
+
+                case "pwd" : {
+                    out.println(System.getenv("PWD"));
                     break;
                 }
                 default: {
@@ -76,7 +80,12 @@ public class Main {
         }
         return null;
     }
-    private static String[] builtins() {
-        return new String[]{"exit", "type", "echo"};
+    private static List<String> builtins() {
+        List<String> builtins = new ArrayList<>();
+        builtins.add("exit");
+        builtins.add("type");
+        builtins.add("echo");
+        builtins.add("pwd");
+        return builtins;
     }
 }
