@@ -1,4 +1,3 @@
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -62,12 +61,17 @@ public class Main {
                 }
 
                 case "cd" : {
-                    Path newPath = Path.of(cwd).resolve(parameter).normalize();
-                    if (Files.exists(newPath) && Files.isDirectory(newPath)) {
-                        cwd = newPath.toString();
+                    if (parameter.equals("~")) {
+                        cwd = System.getenv("HOME");
                     } else {
-                        out.println("cd: " + parameter + ": No such file or directory");
+                        Path newPath = Path.of(cwd).resolve(parameter).normalize();
+                        if (Files.exists(newPath) && Files.isDirectory(newPath)) {
+                            cwd = newPath.toString();
+                        } else {
+                            out.println("cd: " + parameter + ": No such file or directory");
+                        }
                     }
+
                     break;
                 }
 
