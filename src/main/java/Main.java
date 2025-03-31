@@ -1,3 +1,4 @@
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
@@ -39,9 +40,9 @@ public class Main {
                         parameter.equalsIgnoreCase(builtins[2])) {
                         out.println(parameter + " is a shell builtin");
                     } else {
-                        String pathName = getPath(parameter);
-                        if (pathName != null) {
-                            out.println(parameter + " is " + pathName);;
+                        Path path = getPath(parameter);
+                        if (path != null) {
+                            out.println(parameter + " is " + path);;
                         } else {
                             out.println(parameter + ": not found");
                         }
@@ -53,16 +54,24 @@ public class Main {
                     out.println(parameter);
                     break;
                 }
-                default: out.println(input + ": command not found");
+                default: {
+                    Path path = getPath(command);
+                    if (path != null){
+                        Process process = Runtime.getRuntime().exec(new String[]{command, parameter});
+                        process.getInputStream().transferTo(out);
+                    } else {
+                        out.println(input + ": command not found");
+                    }
+                }
             }
         }
     }
 
-    public static String getPath(String parameterStr) {
+    public static Path getPath(String parameter) {
         for (String dir : System.getenv("PATH").split(":")) {
-            Path fullPath = Path.of(dir, parameterStr);
+            Path fullPath = Path.of(dir, parameter);
             if (Files.isRegularFile(fullPath)){
-                return fullPath.toString();
+                return fullPath;
             }
         }
         return null;
