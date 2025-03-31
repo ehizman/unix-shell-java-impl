@@ -1,5 +1,5 @@
-import javax.swing.*;
-import java.util.Arrays;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Scanner;
 
 import static java.lang.System.*;
@@ -7,43 +7,74 @@ import static java.lang.System.*;
 public class Main {
     public static void main(String[] args) throws Exception {
         // Uncomment this block to pass the first stage
-
-        System.out.print("$ ");
         Scanner scanner = new Scanner(System.in);
-        String input = scanner.nextLine();
+        String[] builtins = builtins();
 
-        while (!input.startsWith("exit")){
-
-            if (input.startsWith("type")) {
-                handleTypeCommand(input);
-            } else if (input.startsWith("echo")) {
-                handleEchoCommand(input);
-            } else if (input.startsWith("path")) {
-                out.println("Args: " + Arrays.toString(args));
-                handlePathCommand(input);
-            }else{
-                out.println(input + ": command not found");
-            }
+        while (true){
             System.out.print("$ ");
-            input = scanner.nextLine();
+            String input = scanner.nextLine();
+
+            String[] str = input.split(" ");
+            String command = str[0];
+            StringBuilder parameter = new StringBuilder();
+
+            if (str.length > 2) {
+                for (int i = 1; i < str.length ; i++) {
+                    if (i < str.length-1) {
+                        parameter.append(str[i]).append(" ");
+                    } else {
+                        parameter.append(str[i]);
+                    }
+                }
+            }
+            String parameterStr = parameter.toString();
+
+            switch (command) {
+                case "exit": {
+                    if (parameterStr.equals("0")){
+                        System.exit(0);
+                    } else {
+                        out.println(input + ": command not found");
+                    }
+                    break;
+                }
+
+                case "type": {
+                    if (parameterStr.equalsIgnoreCase(builtins[0])||
+                        parameterStr.equalsIgnoreCase(builtins[1])||
+                        parameterStr.equalsIgnoreCase(builtins[2])) {
+                        out.println(command + " is a shell builtin");
+                    } else {
+                        out.println(command+ ": not found");
+                        String pathName = getPath(parameterStr);
+                        if (pathName != null) {
+                            out.println(parameterStr + " is " + pathName);;
+                        } else {
+                            out.println(parameterStr + ": not found");
+                        }
+                    }
+                    break;
+                }
+
+                case "echo": {
+                    out.println(parameterStr);
+                    break;
+                }
+                default: out.println(input + ": command not found");
+            }
         }
     }
 
-    private static void handlePathCommand(String input) {
-        out.println("Input: " + input);
-    }
-
-    private static void handleTypeCommand(String input) {
-        String command = input.substring(5);
-
-        if (command.equalsIgnoreCase("type") || command.equalsIgnoreCase("echo") || command.equalsIgnoreCase("exit")){
-            out.println(command + " is a shell builtin");
-        } else {
-            out.println(command+ ": not found");
+    public static String getPath(String parameterStr) {
+        for (String dir : System.getenv("PATH").split(":")) {
+            Path fullPath = Path.of(dir, parameterStr);
+            if (Files.isRegularFile(fullPath)){
+                return fullPath.toString();
+            }
         }
+        return null;
     }
-
-    private static void handleEchoCommand(String input) {
-        out.println(input.substring(5));
+    private static String[] builtins() {
+        return new String[]{"exit", "type", "echo"};
     }
 }
