@@ -1,6 +1,7 @@
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
@@ -51,7 +52,24 @@ public class Main {
                 }
 
                 case "echo": {
-                    out.println(parameter);
+                    if (parameter.startsWith("'")) {
+                        String[] parameterStrArr = parameter.split("'");
+                        StringBuilder sb = new StringBuilder();
+                        Arrays.stream(parameterStrArr)
+                                .filter(s -> !s.trim().isEmpty())
+                                .forEach(s -> sb.append(s).append(" "));
+                        out.println(sb.toString().trim());
+                    } else if (parameter.matches("\\w*(\\s)+\\w*")) {
+                        out.println("here");
+                        String[] parameterStrArr = parameter.split(" ");
+                        StringBuilder sb = new StringBuilder();
+                        Arrays.stream(parameterStrArr)
+                                .filter(s -> s.trim().isEmpty())
+                                .forEach(s -> sb.append(s).append(" "));
+                        out.println(sb.toString().trim());
+                    } else {
+                        out.println(parameter);
+                    }
                     break;
                 }
 
