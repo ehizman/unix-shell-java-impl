@@ -1,3 +1,5 @@
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -53,20 +55,11 @@ public class Main {
 
                 case "echo": {
                     if (parameter.startsWith("'")) {
-                        String[] parameterStrArr = parameter.split("'");
-                        StringBuilder sb = new StringBuilder();
-                        Arrays.stream(parameterStrArr)
-                                .filter(s -> !s.trim().isEmpty())
-                                .forEach(s -> sb.append(s).append(" "));
-                        out.println(sb.toString().trim());
+                       parameter = parameter.replaceAll("'", "");
+                       out.println(parameter);
                     } else if (parameter.matches("\\w*(\\s)+\\w*")) {
-                        out.println("here");
-                        String[] parameterStrArr = parameter.split(" ");
-                        StringBuilder sb = new StringBuilder();
-                        Arrays.stream(parameterStrArr)
-                                .filter(s -> s.trim().isEmpty())
-                                .forEach(s -> sb.append(s).append(" "));
-                        out.println(sb.toString().trim());
+                        parameter = parameter.replaceAll("\\s+", " ");
+                        out.println(parameter);
                     } else {
                         out.println(parameter);
                     }
@@ -89,6 +82,30 @@ public class Main {
                             out.println("cd: " + parameter + ": No such file or directory");
                         }
                     }
+
+                    break;
+                }
+                case "cat": {
+                    StringBuilder sb = new StringBuilder();
+                    List<String> filePaths = new ArrayList<>();
+
+                    Arrays.stream(parameter.split("' '"))
+                            .forEach(string -> {
+                                filePaths.add(string.replace("'", "").trim());
+                            });
+                    filePaths.forEach(string -> {
+                                File file = new File(string);
+                                try {
+                                    Scanner sc = new Scanner(file);
+                                    while (sc.hasNext()) {
+                                        String contents = sc.nextLine();
+                                        sb.append(contents);
+                                    }
+                                } catch (FileNotFoundException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            });
+                    out.println(sb);
 
                     break;
                 }
