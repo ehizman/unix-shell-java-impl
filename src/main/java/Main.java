@@ -12,12 +12,12 @@ import static java.lang.System.*;
 public class Main {
     public static void main(String[] args) throws Exception {
         // Uncomment this block to pass the first stage
-        Scanner scanner = new Scanner(System.in);
+        Scanner scanner = new Scanner(in);
         List<String> builtins = builtins();
-        String cwd = System.getenv("PWD");
+        String cwd = getenv("PWD");
 
         while (true){
-            System.out.print("$ ");
+            out.print("$ ");
             String input = scanner.nextLine();
             int indexOfFirstSpace = input.indexOf(" ");
             String command, parameter = "";
@@ -32,7 +32,7 @@ public class Main {
             switch (command) {
                 case "exit": {
                     if (parameter.equals("0")){
-                        System.exit(0);
+                        exit(0);
                     } else {
                         out.println(input + ": command not found");
                     }
@@ -54,15 +54,13 @@ public class Main {
                 }
 
                 case "echo": {
-                    if (parameter.startsWith("'")) {
-                       parameter = parameter.replaceAll("'", "");
-                       out.println(parameter);
-                    } else if (parameter.matches("\\w*(\\s)+\\w*")) {
+                    if (parameter.startsWith("'") || parameter.startsWith("\"")) {
+                        parameter = parseQuotes(parameter);
+                    }else if (parameter.matches("\\w*(\\s)+\\w*")) {
                         parameter = parameter.replaceAll("\\s+", " ");
-                        out.println(parameter);
-                    } else {
-                        out.println(parameter);
                     }
+                    out.println(parameter.trim());
+
                     break;
                 }
 
@@ -73,7 +71,7 @@ public class Main {
 
                 case "cd" : {
                     if (parameter.equals("~")) {
-                        cwd = System.getenv("HOME");
+                        cwd = getenv("HOME");
                     } else {
                         Path newPath = Path.of(cwd).resolve(parameter).normalize();
                         if (Files.exists(newPath) && Files.isDirectory(newPath)) {
@@ -124,7 +122,7 @@ public class Main {
     }
 
     public static Path getPath(String parameter) {
-        for (String dir : System.getenv("PATH").split(":")) {
+        for (String dir : getenv("PATH").split(":")) {
             Path fullPath = Path.of(dir, parameter);
             if (Files.isRegularFile(fullPath)){
                 return fullPath;
@@ -140,5 +138,22 @@ public class Main {
         builtins.add("pwd");
         builtins.add("cd");
         return builtins;
+    }
+
+    private static String parseQuotes(String parameter) { // "world  hello"  "test""shell";
+        StringBuilder result = new StringBuilder();
+        int sPtr = 0, fPtr = 1;
+        char quoteChar = parameter.charAt(0) == '"' ? '"' : '\'';
+        while (fPtr < parameter.length()) {
+            boolean foundQuote = parameter.charAt(fPtr) == quoteChar;
+            if (foundQuote && (fPtr - sPtr > 1)) {
+                result.append(parameter, sPtr+1, fPtr);
+                sPtr = fPtr;
+            } else if(foundQuote) {
+                sPtr = fPtr;
+            }
+            fPtr++;
+        }
+        return result.toString();
     }
 }
