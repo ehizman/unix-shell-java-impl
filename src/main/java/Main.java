@@ -57,6 +57,8 @@ public class Main {
                         parameter = parseQuotes(parameter);
                     }else if (parameter.matches("\\w*(\\s)+\\w*")) {
                         parameter = parameter.replaceAll("\\s+", " ");
+                    } else if (parameter.contains("\\")) {
+                        parameter = parseNonQuotedBackSlash(parameter);
                     }
                     out.println(parameter.trim());
 
@@ -125,6 +127,16 @@ public class Main {
                 }
             }
         }
+    }
+
+    private static String parseNonQuotedBackSlash(String parameter) {
+        StringBuilder result = new StringBuilder();
+        for (char literal : parameter.toCharArray()) {
+            if (literal != '\\') {
+                result.append(literal);
+            }
+        }
+        return result.toString();
     }
 
     public static Path getPath(String parameter) {
