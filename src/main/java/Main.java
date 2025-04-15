@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import static java.lang.System.*;
 
@@ -86,11 +87,20 @@ public class Main {
                 case "cat": {
                     StringBuilder sb = new StringBuilder();
                     List<String> filePaths = new ArrayList<>();
+                    // "/tmp/quz/f 93" "/tmp/quz/f   13" "/tmp/quz/f's15"
+                    if (parameter.charAt(0)=='\''){
+                        Arrays.stream(parameter.split("' '"))
+                                .forEach(string -> {
+                                    filePaths.add(string.replace("'", "").trim());
+                                });
+                    } else if (parameter.charAt(0) == '"'){
+                        Arrays.stream(parameter.split("\" \""))
+                                .forEach(string -> {
+                                    if (string.contains("\"")) filePaths.add(string.replace("\"", "").trim());
+                                    else filePaths.add(string);
+                                });
+                    }
 
-                    Arrays.stream(parameter.split("' '"))
-                            .forEach(string -> {
-                                filePaths.add(string.replace("'", "").trim());
-                            });
                     filePaths.forEach(string -> {
                                 File file = new File(string);
                                 try {
@@ -140,14 +150,19 @@ public class Main {
         return builtins;
     }
 
-    private static String parseQuotes(String parameter) { // "world  hello"  "test""shell";
+    private static String parseQuotes(String parameter) { //  "script  test"  "hello""example"
         StringBuilder result = new StringBuilder();
         int sPtr = 0, fPtr = 1;
         char quoteChar = parameter.charAt(0) == '"' ? '"' : '\'';
+        boolean foundQuote;
         while (fPtr < parameter.length()) {
-            boolean foundQuote = parameter.charAt(fPtr) == quoteChar;
+            foundQuote = parameter.charAt(fPtr) == quoteChar; //false
             if (foundQuote && (fPtr - sPtr > 1)) {
-                result.append(parameter, sPtr+1, fPtr);
+                if (parameter.substring(sPtr+1, fPtr).isBlank()){
+                    result.append(" ");
+                } else {
+                    result.append(parameter, sPtr+1, fPtr);
+                }
                 sPtr = fPtr;
             } else if(foundQuote) {
                 sPtr = fPtr;
