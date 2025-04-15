@@ -6,13 +6,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 
 import static java.lang.System.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        // Uncomment this block to pass the first stage
         Scanner scanner = new Scanner(in);
         List<String> builtins = builtins();
         String cwd = getenv("PWD");
@@ -81,7 +79,6 @@ public class Main {
                             out.println("cd: " + parameter + ": No such file or directory");
                         }
                     }
-
                     break;
                 }
                 case "cat": {
@@ -114,7 +111,6 @@ public class Main {
                                 }
                             });
                     out.println(sb);
-
                     break;
                 }
 
