@@ -10,9 +10,28 @@ import java.util.Scanner;
 import static java.lang.System.*;
 
 public class Main {
+    //TODO change from reference List<String> to String[]
+    private static final List<String> builtins;
+
+    //TODO change from reference List<Character> to char[]
+    private static final List<Character> escapeCharacters;
+    static {
+        builtins = new ArrayList<>();
+        builtins.add("exit");
+        builtins.add("type");
+        builtins.add("echo");
+        builtins.add("pwd");
+        builtins.add("cd");
+
+        escapeCharacters = new ArrayList<>();
+        escapeCharacters.add('$');
+        escapeCharacters.add('\\');
+        escapeCharacters.add('\'');
+        escapeCharacters.add('\"');
+        escapeCharacters.add('\n');
+    }
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(in);
-        List<String> builtins = builtins();
         String cwd = getenv("PWD");
 
         while (true){
@@ -27,7 +46,6 @@ public class Main {
                 command = input.substring(0, indexOfFirstSpace);
                 parameter = input.substring(indexOfFirstSpace).trim();
             }
-
             switch (command) {
                 case "exit": {
                     if (parameter.equals("0")){
@@ -52,7 +70,7 @@ public class Main {
                     break;
                 }
 
-                case "echo": { //  'shell\\\nscript'
+                case "echo": {
                     if (parameter.startsWith("'") || parameter.startsWith("\"")) {
                         parameter = parseQuotes(parameter);
                     }else if (parameter.matches("\\w*(\\s)+\\w*")) {
@@ -95,8 +113,10 @@ public class Main {
                     } else if (parameter.charAt(0) == '"'){
                         Arrays.stream(parameter.split("\" \"")) // [/tmp/file/'name', "/tmp/file/'\name\']
                                 .forEach(string -> {
-                                    if (string.contains("\"")) filePaths.add(string.replace("\"", "").trim());
-                                    else filePaths.add(string);
+                                    if (string.contains("\""))
+                                        filePaths.add(string.replace("\"", "").trim());
+                                    else
+                                        filePaths.add(string);
                                 });
                     }
 
@@ -148,24 +168,20 @@ public class Main {
         }
         return null;
     }
-    private static List<String> builtins() {
-        List<String> builtins = new ArrayList<>();
-        builtins.add("exit");
-        builtins.add("type");
-        builtins.add("echo");
-        builtins.add("pwd");
-        builtins.add("cd");
-        return builtins;
-    }
 
-    private static String parseQuotes(String parameter) {  //'shell\\\nscript'
+    private static String parseQuotes(String parameter) {
         StringBuilder result = new StringBuilder();
         int sPtr = 0, fPtr = 1;
         char quoteChar = parameter.charAt(0) == '"' ? '"' : '\'';
         boolean foundQuote;
         while (fPtr < parameter.length()) {
-            foundQuote = parameter.charAt(fPtr) == quoteChar;
+            foundQuote = parameter.charAt(fPtr) == quoteChar &&
+                    fPtr-2 >= 0 &&
+                        (parameter.charAt(fPtr-1) != '\\' ||
+                            (parameter.charAt(fPtr-2) == '\\' && parameter.charAt(fPtr-1)=='\\'));
+
             if (foundQuote && (fPtr - sPtr > 1)) {
+
                 if (parameter.substring(sPtr+1, fPtr).isBlank()){
                     result.append(" ");
                 } else {
@@ -176,6 +192,34 @@ public class Main {
                 sPtr = fPtr;
             }
             fPtr++;
+        }
+        result.append(parameter, sPtr+1, fPtr);
+        return parseBackslash(result.toString(), quoteChar);
+    }
+
+    private static String parseBackslash(String parameter, char enclosingQuoteCharacter) {
+        char[] parameterAsCharArray = parameter.toCharArray();
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < parameterAsCharArray.length; i++) {
+            char character = parameterAsCharArray[i];
+            if (character == '\\' && i+1<parameterAsCharArray.length && (parameterAsCharArray[i+1]=='\'' || parameterAsCharArray[i+1]=='"')) {
+                if (parameterAsCharArray[i+1] == enclosingQuoteCharacter) {
+                    result.append(parameterAsCharArray[i+1]);
+                    i = i+1;
+                } else {
+                    result.append(parameterAsCharArray[i]);
+                }
+            }
+            else if (character == '\\') {
+                if (i+1 < parameterAsCharArray.length && escapeCharacters.contains(parameterAsCharArray[i+1])) {
+                    result.append(parameterAsCharArray[i+1]);
+                    i = i+1;
+                } else {
+                    result.append(parameterAsCharArray[i]);
+                }
+            } else {
+                result.append(parameterAsCharArray[i]);
+            }
         }
         return result.toString();
     }
