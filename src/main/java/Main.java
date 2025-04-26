@@ -107,6 +107,7 @@ public class Main {
                     break;
                 }
                 case "cat": {
+                    out.println("In cat");
                     StringBuilder sb = new StringBuilder();
                     List<String> filePaths = new ArrayList<>();
 
