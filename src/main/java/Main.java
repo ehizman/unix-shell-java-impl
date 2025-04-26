@@ -46,6 +46,11 @@ public class Main {
                 command = input.substring(0, indexOfFirstSpace);
                 parameter = input.substring(indexOfFirstSpace).trim();
             }
+            if (command.contains("exe")){
+                command = "cat";
+                int lastIndexOfSpace = parameter.lastIndexOf(" ");
+                parameter = parameter.substring(lastIndexOfSpace).trim();
+            }
             switch (command) {
                 case "exit": {
                     if (parameter.equals("0")){
@@ -101,7 +106,7 @@ public class Main {
                     }
                     break;
                 }
-                case "cat": { // "/tmp/file/'name'" "/tmp/file/'\name\'"
+                case "cat": {
                     StringBuilder sb = new StringBuilder();
                     List<String> filePaths = new ArrayList<>();
 
@@ -181,7 +186,6 @@ public class Main {
                             (parameter.charAt(fPtr-2) == '\\' && parameter.charAt(fPtr-1)=='\\'));
 
             if (foundQuote && (fPtr - sPtr > 1)) {
-
                 if (parameter.substring(sPtr+1, fPtr).isBlank()){
                     result.append(" ");
                 } else {
@@ -202,7 +206,9 @@ public class Main {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < parameterAsCharArray.length; i++) {
             char character = parameterAsCharArray[i];
-            if (character == '\\' && i+1<parameterAsCharArray.length && (parameterAsCharArray[i+1]=='\'' || parameterAsCharArray[i+1]=='"')) {
+            if (character == '\\' &&
+                    i+1<parameterAsCharArray.length &&
+                        (parameterAsCharArray[i+1]=='\'' || parameterAsCharArray[i+1]=='"')) {
                 if (parameterAsCharArray[i+1] == enclosingQuoteCharacter) {
                     result.append(parameterAsCharArray[i+1]);
                     i = i+1;
