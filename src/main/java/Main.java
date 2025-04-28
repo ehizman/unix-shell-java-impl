@@ -1,11 +1,11 @@
+import main.java.ArgumentParser;
+import main.java.Utils;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 import static java.lang.System.*;
 
@@ -14,7 +14,6 @@ public class Main {
     private static final List<String> builtins;
 
     //TODO change from reference List<Character> to char[]
-    private static final List<Character> escapeCharacters;
     static {
         builtins = new ArrayList<>();
         builtins.add("exit");
@@ -23,12 +22,6 @@ public class Main {
         builtins.add("pwd");
         builtins.add("cd");
 
-        escapeCharacters = new ArrayList<>();
-        escapeCharacters.add('$');
-        escapeCharacters.add('\\');
-        escapeCharacters.add('\'');
-        escapeCharacters.add('\"');
-        escapeCharacters.add('\n');
     }
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(in);
@@ -37,19 +30,21 @@ public class Main {
         while (true){
             out.print("$ ");
             String input = scanner.nextLine();
-            int indexOfFirstSpace = input.indexOf(" ");
             String command, parameter = "";
 
-            if (indexOfFirstSpace == -1) {
-                command = input;
-            } else {
-                command = input.substring(0, indexOfFirstSpace);
-                parameter = input.substring(indexOfFirstSpace).trim();
-            }
-            if (command.contains("exe")){
+            // TODO modify this part to correctly parse command and parameter
+
+            List<String> arguments = ArgumentParser.parse(input);
+            command = arguments.removeFirst();
+            parameter = String.join(" ", arguments).trim();
+//            if (indexOfFirstSpace == -1) {
+//                command = input;
+//            } else {
+//                command = input.substring(0, indexOfFirstSpace);
+//                parameter = input.substring(indexOfFirstSpace).trim();
+//            }
+            if (command.startsWith("exe")){
                 command = "cat";
-                int lastIndexOfSpace = parameter.lastIndexOf(" ");
-                parameter = parameter.substring(lastIndexOfSpace).trim();
             }
             switch (command) {
                 case "exit": {
@@ -65,7 +60,7 @@ public class Main {
                     if (builtins.contains(parameter)) {
                         out.println(parameter + " is a shell builtin");
                     } else {
-                        Path path = getPath(parameter);
+                        Path path = Utils.getPath(parameter);
                         if (path != null) {
                             out.println(parameter + " is " + path);;
                         } else {
@@ -77,11 +72,11 @@ public class Main {
 
                 case "echo": {
                     if (parameter.startsWith("'") || parameter.startsWith("\"")) {
-                        parameter = parseQuotes(parameter);
+                        parameter = Utils.parseQuotes(parameter);
                     }else if (parameter.matches("\\w*(\\s)+\\w*")) {
                         parameter = parameter.replaceAll("\\s+", " ");
                     } else if (parameter.contains("\\")) {
-                        parameter = parseNonQuotedBackSlash(parameter);
+                        parameter = Utils.parseNonQuotedBackSlash(parameter);
                     }
                     out.println(parameter.trim());
 
@@ -107,7 +102,6 @@ public class Main {
                     break;
                 }
                 case "cat": {
-                    out.println("In cat");
                     StringBuilder sb = new StringBuilder();
                     List<String> filePaths = new ArrayList<>();
 
@@ -117,13 +111,15 @@ public class Main {
                                     filePaths.add(string.replace("'", "").trim());
                                 });
                     } else if (parameter.charAt(0) == '"'){
-                        Arrays.stream(parameter.split("\" \"")) // [/tmp/file/'name', "/tmp/file/'\name\']
+                        Arrays.stream(parameter.split("\" \""))
                                 .forEach(string -> {
                                     if (string.contains("\""))
                                         filePaths.add(string.replace("\"", "").trim());
                                     else
                                         filePaths.add(string);
                                 });
+                    } else{
+                        filePaths.add(parameter);
                     }
 
                     filePaths.forEach(string -> {
@@ -143,7 +139,7 @@ public class Main {
                 }
 
                 default: {
-                    Path path = getPath(command);
+                    Path path = Utils.getPath(command);
                     if (path != null){
                         Process process = Runtime.getRuntime().exec(new String[]{command, parameter});
                         process.getInputStream().transferTo(out);
@@ -153,81 +149,5 @@ public class Main {
                 }
             }
         }
-    }
-
-    private static String parseNonQuotedBackSlash(String parameter) {
-        StringBuilder result = new StringBuilder();
-        for (char literal : parameter.toCharArray()) {
-            if (literal != '\\') {
-                result.append(literal);
-            }
-        }
-        return result.toString();
-    }
-
-    public static Path getPath(String parameter) {
-        for (String dir : getenv("PATH").split(":")) {
-            Path fullPath = Path.of(dir, parameter);
-            if (Files.isRegularFile(fullPath)){
-                return fullPath;
-            }
-        }
-        return null;
-    }
-
-    private static String parseQuotes(String parameter) {
-        StringBuilder result = new StringBuilder();
-        int sPtr = 0, fPtr = 1;
-        char quoteChar = parameter.charAt(0) == '"' ? '"' : '\'';
-        boolean foundQuote;
-        while (fPtr < parameter.length()) {
-            foundQuote = parameter.charAt(fPtr) == quoteChar &&
-                    fPtr-2 >= 0 &&
-                        (parameter.charAt(fPtr-1) != '\\' ||
-                            (parameter.charAt(fPtr-2) == '\\' && parameter.charAt(fPtr-1)=='\\'));
-
-            if (foundQuote && (fPtr - sPtr > 1)) {
-                if (parameter.substring(sPtr+1, fPtr).isBlank()){
-                    result.append(" ");
-                } else {
-                    result.append(parameter, sPtr+1, fPtr);
-                }
-                sPtr = fPtr;
-            } else if(foundQuote) {
-                sPtr = fPtr;
-            }
-            fPtr++;
-        }
-        result.append(parameter, sPtr+1, fPtr);
-        return parseBackslash(result.toString(), quoteChar);
-    }
-
-    private static String parseBackslash(String parameter, char enclosingQuoteCharacter) {
-        char[] parameterAsCharArray = parameter.toCharArray();
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < parameterAsCharArray.length; i++) {
-            char character = parameterAsCharArray[i];
-            if (character == '\\' &&
-                    i+1<parameterAsCharArray.length &&
-                        (parameterAsCharArray[i+1]=='\'' || parameterAsCharArray[i+1]=='"')) {
-                if (parameterAsCharArray[i+1] == enclosingQuoteCharacter) {
-                    result.append(parameterAsCharArray[i+1]);
-                    i = i+1;
-                } else {
-                    result.append(parameterAsCharArray[i]);
-                }
-            }
-            else if (character == '\\') {
-                if (i+1 < parameterAsCharArray.length && escapeCharacters.contains(parameterAsCharArray[i+1])) {
-                    result.append(parameterAsCharArray[i+1]);
-                    i = i+1;
-                } else {
-                    result.append(parameterAsCharArray[i]);
-                }
-            } else {
-                result.append(parameterAsCharArray[i]);
-            }
-        }
-        return result.toString();
     }
 }
