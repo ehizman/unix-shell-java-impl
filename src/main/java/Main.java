@@ -1,10 +1,10 @@
 import main.java.ArgumentParser;
 import main.java.Utils;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFileAttributes;
 import java.util.*;
 
 import static java.lang.System.*;
@@ -12,6 +12,8 @@ import static java.lang.System.*;
 public class Main {
     //TODO change from reference List<String> to String[]
     private static final List<String> builtins;
+    private static String REDIRECT_OUTPUT_LOCATION;
+    private static String SOURCE;
 
     //TODO change from reference List<Character> to char[]
     static {
@@ -37,16 +39,37 @@ public class Main {
             List<String> arguments = ArgumentParser.parse(input);
             command = arguments.removeFirst();
             parameter = String.join(" ", arguments).trim();
-//            if (indexOfFirstSpace == -1) {
-//                command = input;
-//            } else {
-//                command = input.substring(0, indexOfFirstSpace);
-//                parameter = input.substring(indexOfFirstSpace).trim();
-//            }
             if (command.startsWith("exe")){
                 command = "cat";
             }
+            if (parameter.contains(">") || parameter.contains("1>")) {
+                SOURCE = parameter.split(">")[0].split(" ")[1].trim();
+                REDIRECT_OUTPUT_LOCATION = parameter.split(">")[1].trim();
+            }
             switch (command) {
+                case "ls": {
+                    File sourceDirectory = new File(SOURCE);
+                    if (sourceDirectory.isDirectory()) {
+                        File[] files = sourceDirectory.listFiles();
+                        if (files != null) {
+                            List<File> fileList = new ArrayList<>(List.of(files));
+                            fileList.sort(Comparator.comparing(path -> {
+                                try {
+                                    return Files.readAttributes(path.toPath(), PosixFileAttributes.class).creationTime();
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }));
+                            try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(REDIRECT_OUTPUT_LOCATION))){
+                                for (File file : fileList) {
+                                    bufferedWriter.write(file.getPath());
+                                    bufferedWriter.newLine();
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
                 case "exit": {
                     if (parameter.equals("0")){
                         exit(0);
@@ -105,7 +128,15 @@ public class Main {
                     StringBuilder sb = new StringBuilder();
                     List<String> filePaths = new ArrayList<>();
 
-                    if (parameter.charAt(0)=='\''){
+                    if (REDIRECT_OUTPUT_LOCATION != null){
+                        Scanner sc = new Scanner(new File(REDIRECT_OUTPUT_LOCATION));
+                        while (sc.hasNextLine()) {
+                            String content = sc.nextLine().trim();
+                            if (!content.isBlank()) {
+                                filePaths.add(content);
+                            }
+                        }
+                    } else if (parameter.charAt(0)=='\''){
                         Arrays.stream(parameter.split("' '"))
                                 .forEach(string -> {
                                     filePaths.add(string.replace("'", "").trim());
@@ -118,10 +149,9 @@ public class Main {
                                     else
                                         filePaths.add(string);
                                 });
-                    } else{
+                    } else {
                         filePaths.add(parameter);
                     }
-
                     filePaths.forEach(string -> {
                                 File file = new File(string);
                                 try {
@@ -129,6 +159,7 @@ public class Main {
                                     while (sc.hasNext()) {
                                         String contents = sc.nextLine();
                                         sb.append(contents);
+                                        sb.append('\n');
                                     }
                                 } catch (FileNotFoundException e) {
                                     throw new RuntimeException(e);
